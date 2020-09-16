@@ -7,6 +7,8 @@ const { exec } = require("child_process");
 const packageJson = require("../package.json");
 
 const scripts = `"dev": "webpack-dev-server --config webpack.config.dev.js",
+  "compile": "tsc --noEmit -p src",
+  "lint": "eslint --fix src/**/*.{js,jsx,ts,tsx}",
   "build": "cross-env NODE_ENV=production webpack --config webpack.config.prod.js"`;
 
 const getDeps = (deps) =>
@@ -60,8 +62,6 @@ console.log("Initializing project..");
     "webpack.config.cmn.js", 
     "webpack.config.dev.js",
     "webpack.config.prod.js",
-    "eslintrc.js",
-    ".eslintignore",
     "tsconfig.eslint.json"
   ];
 
@@ -71,27 +71,35 @@ console.log("Initializing project..");
     );
   }
 
-  // npm, при установке пакета, удалит файл .gitignore, поэтому его нельзя скопировать из локальной папки шаблона; этот файл нужно загрузить. После отправки кода в GitHub-репозиторий пользуйтесь raw-файлом .gitignore
-  https.get(
-    "https://raw.githubusercontent.com/Nikhil-Kumaran/reactjs-boilerplate/master/.gitignore",
-    (res) => {
-      res.setEncoding("utf8");
-      let body = "";
-      res.on("data", (data) => {
-        body += data;
-      });
-      res.on("end", () => {
-        fs.writeFile(
-          '.gitignore',
-          body,
-          { encoding: "utf-8" },
-          (err) => {
-            if (err) throw err;
-          }
-        );
-      });
-    }
-  );
+  const filesToLoad = [
+    ".gitignore", 
+    ".eslintrc.js",
+    ".eslintignore"
+  ];
+
+  filesToLoad.forEach((fileName) => {
+    // npm, при установке пакета, удалит файл .gitignore, поэтому его нельзя скопировать из локальной папки шаблона; этот файл нужно загрузить. После отправки кода в GitHub-репозиторий пользуйтесь raw-файлом .gitignore
+    https.get(
+      `https://raw.githubusercontent.com/Abanderungsbedurftig/create-app/master/${fileName}`,
+      (res) => {
+        res.setEncoding("utf8");
+        let body = "";
+        res.on("data", (data) => {
+          body += data;
+        });
+        res.on("end", () => {
+          fs.writeFile(
+            fileName,
+            body,
+            { encoding: "utf-8" },
+            (err) => {
+              if (err) throw err;
+            }
+          );
+        });
+      }
+    );
+  })
 
   console.log("yarn init -- done\n");
 
